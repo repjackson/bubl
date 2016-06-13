@@ -1,0 +1,120 @@
+head
+    title Facet
+
+body
+    +home
+
+template(name='home')
+    #facetnav.ui.menu
+        .ui.header.item Facet
+        .ui.item #{user_counter} users #{doc_counter} docs
+        if currentUser
+            .ui.item
+                .ui.input.authorName
+                    input(type=text placeholder='Search Twitter User')
+        .ui.right.menu
+            if currentUser
+                if hasReceivedTweets
+                    a.item.clear_my_docs
+                        i.remove.red.icon
+                        |Delete My Tweets
+                    a.item.view_my_tweets(class=viewMyTweetsClass)
+                        i.user.icon
+                        |My Tweets
+                else
+                    a.item.get_tweets
+                        i.cloud.green.download.icon
+                        |Get My Tweets
+            .ui.item
+                +loginButtons
+    .ui.secondary.segment
+        .ui.center.aligned.header Filters
+        .ui.segments
+            if $.Session.get 'author_filter'
+                .ui.center.aligned.segment
+                    .ui.center.aligned.header Author
+                    .ui.blue.button.authorFilterButton
+                        |{{$.Session.get 'author_filter'}}
+            .ui.center.aligned.segment.globalcloud
+                .ui.center.aligned.header Authors
+                if selected_screen_names
+                    #clear_screen_names.ui.circular.grey.icon.button
+                        i.remove.icon
+                each selected_screen_names
+                    .unselect_screen_name.ui.large.compact.grey.button
+                        i.minus.icon
+                        |#{this}
+                each global_screen_names
+                    .select_screen_name.ui.large.compact.button
+                        |#{this.text}
+                        small #{this.count}
+            .ui.center.aligned.segment.globalcloud
+                .ui.center.aligned.header Inferred Concepts from Tweets
+                if selected_concepts
+                    #clear_concepts.ui.circular.grey.icon.button
+                        i.remove.icon
+                each selected_concepts
+                    .unselect_concept.ui.large.compact.grey.button
+                        i.minus.icon
+                        |#{this}
+                each global_concepts
+                    .select_concept.ui.large.compact.button
+                        |#{this.text} #{this.relevance}
+                        small #{this.count}
+            .ui.center.aligned.segment.globalcloud
+                .ui.center.aligned.header Mentioned Keywords in Tweets
+                if selected_keywords
+                    #clear_keywords.ui.circular.grey.icon.button
+                        i.remove.icon
+                each selected_keywords
+                    .unselect_keyword.ui.large.compact.grey.button
+                        i.minus.icon
+                        |#{this}
+                each global_keywords
+                    .select_keyword.ui.large.compact.button
+                        |#{this.text}
+                        small #{this.count}
+    .ui.container
+        .ui.secondary.segment
+            each docs
+                .ui.center.aligned.segment
+                    +view
+
+
+template(name='view')
+    .ui.header
+        +markdown
+            #{body}
+    .ui.horizontal.segments
+        if keywords
+            .ui.center.aligned.segment
+                p Keywords
+                each keywords
+                    .doc_keyword.ui.label(class=doc_keyword_class)
+                        div #{text}
+                        div #{relevance}
+        if concepts
+            .ui.center.aligned.segment
+                p Concepts
+                each concepts
+                    .doc_concept.ui.label(class=doc_concept_class)
+                        div #{text}
+                        div #{relevance}
+                        if dbpedia
+                            a(href=dbpedia target="_blank") DBPedia
+                        if opencyc
+                            a(href=opencyc target="_blank") Opencyc
+                        if freebase
+                            a(href=freebase target="_blank") Freebase
+        .ui.center.aligned.segment
+            div Sentiment: #{docSentiment.type} #{docSentiment.score}
+            div Language: #{language}
+            .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}
+        if taxonomy
+            .ui.center.aligned.segment
+                p Taxonomy
+                each taxonomy
+                    .ui.label
+                        div Label: #{label}
+                        div Score: #{score}
+                        div Confident: #{confident}
