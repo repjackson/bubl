@@ -1,5 +1,4 @@
 @selected_keywords = new ReactiveArray []
-@selected_concepts = new ReactiveArray []
 @selected_screen_names = new ReactiveArray []
 
 
@@ -8,7 +7,6 @@ Template.home.onCreated ->
 
     @autorun -> Meteor.subscribe('screen_names', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
     @autorun -> Meteor.subscribe('keywords', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
-    @autorun -> Meteor.subscribe('concepts', selected_concepts.array(), selected_keywords.array(), selected_screen_names.array())
     @autorun -> Meteor.subscribe('docs', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
 
 Template.view.onCreated ->
@@ -25,9 +23,6 @@ Template.home.helpers
     global_screen_names: -> Screennames.find()
     selected_screen_names: -> selected_screen_names.list()
 
-    global_concepts: -> Concepts.find()
-    selected_concepts: -> selected_concepts.list()
-
     user: -> Meteor.user()
     docs: -> Docs.find()
 
@@ -42,10 +37,6 @@ Template.home.events
     'click .select_keyword': -> selected_keywords.push @text
     'click .unselect_keyword': -> selected_keywords.remove @valueOf()
     'click #clear_keywords': -> selected_keywords.clear()
-
-    'click .select_concept': -> selected_concepts.push @text
-    'click .unselect_concept': -> selected_concepts.remove @valueOf()
-    'click #clear_concepts': -> selected_concepts.clear()
 
     'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
         Meteor.setTimeout (->
@@ -78,6 +69,5 @@ Template.home.events
 
 Template.view.helpers
     doc_keyword_class: -> if @text.valueOf() in selected_keywords.array() then 'grey' else ''
-    doc_concept_class: -> if @text.valueOf() in selected_concepts.array() then 'grey' else ''
     authorButtonClass: -> if @screen_name in selected_screen_names.array() then 'active' else ''
 

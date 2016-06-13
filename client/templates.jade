@@ -1,12 +1,12 @@
 head
-    title Facet
+    title Bubl
 
 body
     +home
 
 template(name='home')
     #facetnav.ui.menu
-        .ui.header.item Facet
+        .ui.header.item Bubl
         .ui.item #{user_counter} users #{doc_counter} docs
         if currentUser
             .ui.item
@@ -49,19 +49,6 @@ template(name='home')
                         |#{this.text}
                         small #{this.count}
             .ui.center.aligned.segment.globalcloud
-                .ui.center.aligned.header Inferred Concepts from Tweets
-                if selected_concepts
-                    #clear_concepts.ui.circular.grey.icon.button
-                        i.remove.icon
-                each selected_concepts
-                    .unselect_concept.ui.large.compact.grey.button
-                        i.minus.icon
-                        |#{this}
-                each global_concepts
-                    .select_concept.ui.large.compact.button
-                        |#{this.text} #{this.relevance}
-                        small #{this.count}
-            .ui.center.aligned.segment.globalcloud
                 .ui.center.aligned.header Mentioned Keywords in Tweets
                 if selected_keywords
                     #clear_keywords.ui.circular.grey.icon.button
@@ -93,28 +80,5 @@ template(name='view')
                     .doc_keyword.ui.label(class=doc_keyword_class)
                         div #{text}
                         div #{relevance}
-        if concepts
-            .ui.center.aligned.segment
-                p Concepts
-                each concepts
-                    .doc_concept.ui.label(class=doc_concept_class)
-                        div #{text}
-                        div #{relevance}
-                        if dbpedia
-                            a(href=dbpedia target="_blank") DBPedia
-                        if opencyc
-                            a(href=opencyc target="_blank") Opencyc
-                        if freebase
-                            a(href=freebase target="_blank") Freebase
         .ui.center.aligned.segment
-            div Sentiment: #{docSentiment.type} #{docSentiment.score}
-            div Language: #{language}
             .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}
-        if taxonomy
-            .ui.center.aligned.segment
-                p Taxonomy
-                each taxonomy
-                    .ui.label
-                        div Label: #{label}
-                        div Score: #{score}
-                        div Confident: #{confident}

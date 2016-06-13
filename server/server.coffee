@@ -25,6 +25,8 @@ Meteor.methods
         }, Meteor.bindEnvironment(((err, data, response) ->
             for tweet in data
                 id = Docs.insert
+                    authorId: Meteor.userId()
+                    tags: ['bubl']
                     body: tweet.text
                     screen_name: screen_name
                 Meteor.call 'analyze', id, tweet.text
@@ -33,6 +35,19 @@ Meteor.methods
         if screen_name is Meteor.user().profile.name
             Meteor.users.update Meteor.userId,
                 $set: hasReceivedTweets: true
+
+    suggest_tags: (id, body)->
+        doc = Docs.findOne id
+        suggested_tags = Yaki(body).extract()
+        cleaned_suggested_tags = Yaki(suggested_tags).clean()
+        uniqued = _.uniq(cleaned_suggested_tags)
+        lowered = uniqued.map (tag)-> tag.toLowerCase()
+
+        #lowered = tag.toLowerCase() for tag in uniqued
+
+        Docs.update id,
+            $set: suggested_tags: lowered
+
 
     analyze: (id, body)->
         doc = Docs.findOne id
@@ -45,21 +60,16 @@ Meteor.methods
             html: body
             outputMode: 'json'
             # extract: 'entity,keyword,title,author,taxonomy,concept,relation,pub-date,doc-sentiment' }
-            extract: 'keyword,taxonomy,concept,doc-sentiment' }
+            extract: 'keyword' }
             , (err, result)->
                 if err then console.log err
                 else
                     keyword_array = _.pluck(result.data.keywords, 'text')
-                    concept_array = _.pluck(result.data.concepts, 'text')
 
                     Docs.update id,
                         $set:
-                            docSentiment: result.data.docSentiment
-                            language: result.data.language
                             keywords: result.data.keywords
                             concepts: result.data.concepts
-                            entities: result.data.entities
-                            taxonomy: result.data.taxonomy
                             keyword_array: keyword_array
                             concept_array: concept_array
 
@@ -77,12 +87,12 @@ Docs.allow
     remove: (userId, doc)-> doc.authorId is Meteor.userId()
 
 
-Meteor.publish 'docs', (selected_keywords, selected_concepts, selected_screen_names)->
+Meteor.publish 'docs', (selected_keywords, selected_screen_names)->
     Counts.publish(this, 'doc_counter', Docs.find(), { noReady: true })
 
     match = {}
+    selected_keywords.push 'bubl'
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
-    if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
     if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
@@ -95,12 +105,11 @@ Meteor.publish 'people', -> Meteor.users.find {}
 
 Meteor.publish 'person', (id)-> Meteor.users.find id
 
-Meteor.publish 'screen_names', (selected_keywords, selected_concepts, selected_screen_names)->
+Meteor.publish 'screen_names', (selected_keywords, selected_screen_names)->
     self = @
 
     match = {}
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
-    if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
@@ -120,12 +129,11 @@ Meteor.publish 'screen_names', (selected_keywords, selected_concepts, selected_s
     self.ready()
 
 
-Meteor.publish 'keywords', (selected_keywords, selected_concepts, selected_screen_names)->
+Meteor.publish 'keywords', (selected_keywords, selected_screen_names)->
     self = @
 
     match = {}
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
-    if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
@@ -143,31 +151,5 @@ Meteor.publish 'keywords', (selected_keywords, selected_concepts, selected_scree
         self.added 'keywords', Random.id(),
             text: keyword.text
             count: keyword.count
-
-    self.ready()
-
-Meteor.publish 'concepts', (selected_concepts, selected_keywords, selected_screen_names)->
-    self = @
-
-    match = {}
-    if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
-    if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
-    if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
-
-    cloud = Docs.aggregate [
-        { $match: match }
-        { $project: concepts: 1 }
-        { $unwind: '$concepts' }
-        { $group: _id: '$concepts.text', count: $sum: 1 }
-        { $match: _id: $nin: selected_concepts }
-        { $sort: count: -1, _id: 1 }
-        { $limit: 50 }
-        { $project: _id: 0, text: '$_id', count: 1 }
-        ]
-
-    cloud.forEach (concept) ->
-        self.added 'concepts', Random.id(),
-            text: concept.text
-            count: concept.count
 
     self.ready()
