@@ -8,10 +8,10 @@ template(name='home')
     #facetnav.ui.menu
         .ui.header.item Bubl
         .ui.item #{user_counter} users #{doc_counter} docs
-        if currentUser
-            .ui.item
-                .ui.input.authorName
-                    input(type=text placeholder='Search Twitter User')
+        // if currentUser
+        //     .ui.item
+        //         .ui.input.authorName
+        //             input(type=text placeholder='Search Twitter User')
         .ui.right.menu
             if currentUser
                 if hasReceivedTweets
@@ -26,15 +26,15 @@ template(name='home')
                         i.cloud.green.download.icon
                         |Get My Tweets
             .ui.item
-                +loginButtons
+                +loginButtons align='right'
     .ui.secondary.segment
         .ui.center.aligned.header Filters
         .ui.segments
-            if $.Session.get 'author_filter'
-                .ui.center.aligned.segment
-                    .ui.center.aligned.header Author
-                    .ui.blue.button.authorFilterButton
-                        |{{$.Session.get 'author_filter'}}
+            // if $.Session.get 'author_filter'
+            //     .ui.center.aligned.segment
+            //         .ui.center.aligned.header Author
+            //         .ui.blue.button.authorFilterButton
+            //             |{{$.Session.get 'author_filter'}}
             .ui.center.aligned.segment.globalcloud
                 .ui.center.aligned.header Authors
                 if selected_screen_names
@@ -46,10 +46,11 @@ template(name='home')
                         |#{this}
                 each global_screen_names
                     .select_screen_name.ui.large.compact.button
+                        i.user.icon
                         |#{this.text}
                         small #{this.count}
             .ui.center.aligned.segment.globalcloud
-                .ui.center.aligned.header Mentioned Keywords in Tweets
+                .ui.center.aligned.header Tags
                 if selected_keywords
                     #clear_keywords.ui.circular.grey.icon.button
                         i.remove.icon
@@ -72,13 +73,10 @@ template(name='view')
     .ui.header
         +markdown
             #{body}
-    .ui.horizontal.segments
-        if keywords
-            .ui.center.aligned.segment
-                p Keywords
-                each keywords
-                    .doc_keyword.ui.label(class=doc_keyword_class)
-                        div #{text}
-                        div #{relevance}
-        .ui.center.aligned.segment
-            .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}
+    if keywords
+        span Tags:
+        each keywords
+            .doc_keyword.ui.label(class=doc_keyword_class)
+                div #{text}
+    div
+        .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}

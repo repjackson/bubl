@@ -5,9 +5,9 @@
 Template.home.onCreated ->
     Meteor.subscribe 'people'
 
-    @autorun -> Meteor.subscribe('screen_names', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
-    @autorun -> Meteor.subscribe('keywords', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
-    @autorun -> Meteor.subscribe('docs', selected_keywords.array(), selected_concepts.array(), selected_screen_names.array())
+    @autorun -> Meteor.subscribe('screen_names', selected_keywords.array(), selected_screen_names.array())
+    @autorun -> Meteor.subscribe('keywords', selected_keywords.array(), selected_screen_names.array())
+    @autorun -> Meteor.subscribe('docs', selected_keywords.array(), selected_screen_names.array())
 
 Template.view.onCreated ->
     Meteor.subscribe 'person', @authorId
@@ -38,9 +38,12 @@ Template.home.events
     'click .unselect_keyword': -> selected_keywords.remove @valueOf()
     'click #clear_keywords': -> selected_keywords.clear()
 
+    # 'click .admin_pull': ->
+        # Meteor.call 'get_tweets
+
     'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
         Meteor.setTimeout (->
-            selected_screen_names.push null
+            selected_screen_names.clear()
             ), 1000
 
     'click .get_tweets': -> Meteor.call 'get_tweets', Meteor.user().profile.name, ->
@@ -51,18 +54,6 @@ Template.home.events
     'click .view_my_tweets': -> if Meteor.user().profile.name in selected_screen_names.array() then selected_screen_names.remove Meteor.user().profile.name else selected_screen_names.push Meteor.user().profile.name
 
     'click .tweetViewAuthorButton': -> if @screen_name in selected_screen_names.array() then selected_screen_names.remove @screen_name else selected_screen_names.push @screen_name
-
-    'keyup .authorName': (event)->
-        if event.keyCode is 13
-            test = Docs.findOne screen_name: event.target.value
-            if test
-                alert "Tweets from #{event.target.value} already exist, not importing"
-                event.target.value = ''
-            else Meteor.call 'get_tweets', event.target.value, ->
-                Meteor.setTimeout (->
-                    selected_screen_names.push event.target.value
-                    event.target.value = ''
-                    ), 2000
 
     'click .authorFilterButton': (event)->
         if event.target.innerHTML in selected_screen_names.array() then selected_screen_names.remove event.target.innerHTML else selected_screen_names.push event.target.innerHTML

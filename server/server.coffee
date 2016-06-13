@@ -6,10 +6,8 @@ Meteor.methods
             console.error 'No screen name provided'
             return false
 
-
         twitterConf = ServiceConfiguration.configurations.findOne(service: 'twitter')
         twitter = Meteor.user().services.twitter
-
 
         Twit = new TwitMaker(
             consumer_key: twitterConf.consumerKey
@@ -32,9 +30,9 @@ Meteor.methods
                 Meteor.call 'analyze', id, tweet.text
             ))
 
-        if screen_name is Meteor.user().profile.name
-            Meteor.users.update Meteor.userId,
-                $set: hasReceivedTweets: true
+        # if screen_name is Meteor.user().profile.name
+        Meteor.users.update Meteor.userId,
+            $set: hasReceivedTweets: true
 
     suggest_tags: (id, body)->
         doc = Docs.findOne id
@@ -69,9 +67,7 @@ Meteor.methods
                     Docs.update id,
                         $set:
                             keywords: result.data.keywords
-                            concepts: result.data.concepts
                             keyword_array: keyword_array
-                            concept_array: concept_array
 
 
     clear_my_docs: ->
@@ -91,9 +87,8 @@ Meteor.publish 'docs', (selected_keywords, selected_screen_names)->
     Counts.publish(this, 'doc_counter', Docs.find(), { noReady: true })
 
     match = {}
-    selected_keywords.push 'bubl'
+    match.tags = $all: ['bubl']
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
-    if selected_concepts.length > 0 then match.concept_array = $all: selected_concepts
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     Docs.find match,
@@ -109,6 +104,7 @@ Meteor.publish 'screen_names', (selected_keywords, selected_screen_names)->
     self = @
 
     match = {}
+    match.tags = $all: ['bubl']
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
@@ -133,6 +129,7 @@ Meteor.publish 'keywords', (selected_keywords, selected_screen_names)->
     self = @
 
     match = {}
+    match.tags = $all: ['bubl']
     if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
