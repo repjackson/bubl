@@ -17,6 +17,16 @@ Template.home.helpers
     doc_counter: -> Counts.get('doc_counter')
     user_counter: -> Meteor.users.find().count()
 
+    cloud_tag_class: ->
+        buttonClass = switch
+            when @index <= 10 then 'big'
+            when @index <= 20 then 'large'
+            when @index <= 30 then ''
+            when @index <= 40 then 'small'
+            when @index <= 50 then 'tiny'
+        return buttonClass
+
+
     global_tags: -> Tags.find()
     selected_tags: -> selected_tags.list()
 
@@ -65,3 +75,4 @@ Template.view.helpers
 
 Template.view.events
     'click .delete_tweet': -> Docs.remove @_id
+    'click .doc_tag': -> if @valueOf() in selected_tags.array() then selected_tags.remove @valueOf() else selected_tags.push @valueOf()

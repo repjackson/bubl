@@ -130,8 +130,8 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
     self = @
 
     match = {}
-    match.tags = $all: ['bubl']
-    if selected_tags.length > 0 then match.tags = $all: selected_tags
+    selected_tags.push 'bubl', 'tweet'
+    match.tags = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
@@ -145,9 +145,10 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
-    cloud.forEach (tag) ->
+    cloud.forEach (tag, i) ->
         self.added 'tags', Random.id(),
             text: tag.text
             count: tag.count
+            index: i
 
     self.ready()
