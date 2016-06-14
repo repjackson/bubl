@@ -55,11 +55,11 @@ template(name='home')
                     #clear_tags.ui.circular.grey.icon.button
                         i.remove.icon
                 each selected_tags
-                    .unselect_keyword.ui.large.compact.grey.button
+                    .unselect_tag.ui.large.compact.grey.button
                         i.minus.icon
                         |#{this}
                 each global_tags
-                    .select_keyword.ui.large.compact.button
+                    .select_tag.ui.large.compact.button
                         |#{this.text}
                         small #{this.count}
     .ui.container
@@ -74,7 +74,7 @@ template(name='view')
         +markdown
             #{body}
     strong Tags:
-    each tags
+    each bubl_tags
         .doc_tag.ui.label(class=doc_tag_class)
             div #{this}
     // div Yaki Tags

@@ -38,12 +38,10 @@ Template.home.events
     'click .unselect_tag': -> selected_tags.remove @valueOf()
     'click #clear_tags': -> selected_tags.clear()
 
-    # 'click .admin_pull': ->
-        # Meteor.call 'get_tweets
-
     'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
         Meteor.setTimeout (->
             selected_screen_names.clear()
+            selected_tags.clear()
             ), 1000
 
     'click .get_tweets': -> Meteor.call 'get_tweets', Meteor.user().profile.name, ->
@@ -59,11 +57,11 @@ Template.home.events
         if event.target.innerHTML in selected_screen_names.array() then selected_screen_names.remove event.target.innerHTML else selected_screen_names.push event.target.innerHTML
 
 Template.view.helpers
-    doc_tag_class: -> if @text.valueOf() in selected_tags.array() then 'grey' else ''
+    doc_tag_class: -> if @valueOf() in selected_tags.array() then 'grey' else ''
     authorButtonClass: -> if @screen_name in selected_screen_names.array() then 'active' else ''
     is_author: -> @authorId is Meteor.userId()
     when: -> moment(@timestamp).fromNow()
-
+    bubl_tags: -> _.without(@tags, 'bubl', 'tweet')
 
 Template.view.events
     'click .delete_tweet': -> Docs.remove @_id

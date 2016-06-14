@@ -15,8 +15,8 @@ Meteor.methods
         Twit.get 'statuses/user_timeline', {
             screen_name: screen_name
             count: 200
-            include_rts: false
-            exclude_replies: true
+            include_rts: true
+            exclude_replies: false
         }, Meteor.bindEnvironment(((err, data, response) ->
             for tweet in data
                 # console.log tweet
