@@ -20,17 +20,20 @@ Meteor.methods
             screen_name: screen_name
             count: 200
             include_rts: false
+            exclude_replies: true
         }, Meteor.bindEnvironment(((err, data, response) ->
             for tweet in data
+                # console.log tweet
                 id = Docs.insert
                     authorId: Meteor.userId()
-                    tags: ['bubl']
+                    tags: ['bubl','tweet']
                     body: tweet.text
                     screen_name: screen_name
-                Meteor.call 'alchemy_tag', id, tweet.text, ->
-                    console.log 'alchemy was run'
-                    Meteor.call 'yaki_tag', id, tweet.text, ->
-                        console.log 'yaki was run'
+                    timestamp: Date.now()
+                    tweet_created_at: tweet.created_at
+                # Meteor.call 'alchemy_tag', id, tweet.text, ->
+                #     console.log 'alchemy was run'
+                Meteor.call 'yaki_tag', id, tweet.text
             ))
 
         # if screen_name is Meteor.user().profile.name
@@ -48,29 +51,29 @@ Meteor.methods
 
         Docs.update id,
             $set: yaki_tags: lowered
-            $addToSet: tags: lowered
+            $addToSet: tags: $each: lowered
 
 
-    alchemy_tag: (id, body)->
-        doc = Docs.findOne id
-        encoded = encodeURIComponent(body)
+    # alchemy_tag: (id, body)->
+    #     doc = Docs.findOne id
+    #     encoded = encodeURIComponent(body)
 
-        # result = HTTP.call 'POST', 'http://gateway-a.watsonplatform.net/calls/text/TextGetCombinedData', { params:
-        HTTP.call 'POST', 'http://access.alchemyapi.com/calls/html/HTMLGetCombinedData', { params:
-            apikey: '6656fe7c66295e0a67d85c211066cf31b0a3d0c8'
-            # text: encoded
-            html: body
-            outputMode: 'json'
-            # extract: 'entity,keyword,title,author,taxonomy,concept,relation,pub-date,doc-sentiment' }
-            extract: 'keyword' }
-            , (err, result)->
-                if err then console.log err
-                else
-                    keyword_array = _.pluck(result.data.keywords, 'text')
+    #     # result = HTTP.call 'POST', 'http://gateway-a.watsonplatform.net/calls/text/TextGetCombinedData', { params:
+    #     HTTP.call 'POST', 'http://access.alchemyapi.com/calls/html/HTMLGetCombinedData', { params:
+    #         apikey: '6656fe7c66295e0a67d85c211066cf31b0a3d0c8'
+    #         # text: encoded
+    #         html: body
+    #         outputMode: 'json'
+    #         # extract: 'entity,keyword,title,author,taxonomy,concept,relation,pub-date,doc-sentiment' }
+    #         extract: 'keyword' }
+    #         , (err, result)->
+    #             if err then console.log err
+    #             else
+    #                 keyword_array = _.pluck(result.data.keywords, 'text')
 
-                    Docs.update id,
-                        $set: alchemy_tags: keyword_array
-                        $addToSet: tags: keyword_array
+    #                 Docs.update id,
+    #                     $set: alchemy_tags: keyword_array
+    #                     $addToSet: tags: $each: keyword_array
 
     clear_my_docs: ->
         Docs.remove({screen_name: Meteor.user().profile.name})
@@ -85,12 +88,12 @@ Docs.allow
     remove: (userId, doc)-> doc.authorId is Meteor.userId()
 
 
-Meteor.publish 'docs', (selected_keywords, selected_screen_names)->
+Meteor.publish 'docs', (selected_tags, selected_screen_names)->
     Counts.publish(this, 'doc_counter', Docs.find(), { noReady: true })
 
     match = {}
     match.tags = $all: ['bubl']
-    if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
+    if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     Docs.find match,
@@ -102,12 +105,12 @@ Meteor.publish 'people', -> Meteor.users.find {}
 
 Meteor.publish 'person', (id)-> Meteor.users.find id
 
-Meteor.publish 'screen_names', (selected_keywords, selected_screen_names)->
+Meteor.publish 'screen_names', (selected_tags, selected_screen_names)->
     self = @
 
     match = {}
     match.tags = $all: ['bubl']
-    if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
+    if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
@@ -127,27 +130,27 @@ Meteor.publish 'screen_names', (selected_keywords, selected_screen_names)->
     self.ready()
 
 
-Meteor.publish 'keywords', (selected_keywords, selected_screen_names)->
+Meteor.publish 'tags', (selected_tags, selected_screen_names)->
     self = @
 
     match = {}
     match.tags = $all: ['bubl']
-    if selected_keywords.length > 0 then match.keyword_array = $all: selected_keywords
+    if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
         { $match: match }
-        { $project: keywords: 1 }
-        { $unwind: '$keywords' }
-        { $group: _id: '$keywords.text', count: $sum: 1 }
-        { $match: _id: $nin: selected_keywords }
+        { $project: tags: 1 }
+        { $unwind: '$tags' }
+        { $group: _id: '$tags.text', count: $sum: 1 }
+        { $match: _id: $nin: selected_tags }
         { $sort: count: -1, _id: 1 }
         { $limit: 50 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
     cloud.forEach (keyword) ->
-        self.added 'keywords', Random.id(),
+        self.added 'tags', Random.id(),
             text: keyword.text
             count: keyword.count
 

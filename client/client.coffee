@@ -61,4 +61,9 @@ Template.home.events
 Template.view.helpers
     doc_keyword_class: -> if @text.valueOf() in selected_keywords.array() then 'grey' else ''
     authorButtonClass: -> if @screen_name in selected_screen_names.array() then 'active' else ''
+    is_author: -> @authorId is Meteor.userId()
+    when: -> moment(@timestamp).fromNow()
 
+
+Template.view.events
+    'click .delete_tweet': -> Docs.remove @_id
