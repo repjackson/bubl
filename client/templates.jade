@@ -73,10 +73,13 @@ template(name='view')
     .ui.header
         +markdown
             #{body}
-    if keywords
-        span Tags:
-        each keywords
-            .doc_keyword.ui.label(class=doc_keyword_class)
-                div #{text}
+    .ui.segment
+        .ui.header #{this}
+    div Yaki Tags
+        each yaki_tags
+            .ui.label #{this}
+    div Alchemy Tags
+        each alchemy_tags
+            .ui.label #{this}
     div
         .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}

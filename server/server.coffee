@@ -27,14 +27,17 @@ Meteor.methods
                     tags: ['bubl']
                     body: tweet.text
                     screen_name: screen_name
-                Meteor.call 'analyze', id, tweet.text
+                Meteor.call 'alchemy_tag', id, tweet.text, ->
+                    console.log 'alchemy was run'
+                    Meteor.call 'yaki_tag', id, tweet.text, ->
+                        console.log 'yaki was run'
             ))
 
         # if screen_name is Meteor.user().profile.name
         Meteor.users.update Meteor.userId,
             $set: hasReceivedTweets: true
 
-    suggest_tags: (id, body)->
+    yaki_tag: (id, body)->
         doc = Docs.findOne id
         suggested_tags = Yaki(body).extract()
         cleaned_suggested_tags = Yaki(suggested_tags).clean()
@@ -44,10 +47,11 @@ Meteor.methods
         #lowered = tag.toLowerCase() for tag in uniqued
 
         Docs.update id,
-            $set: suggested_tags: lowered
+            $set: yaki_tags: lowered
+            $addToSet: tags: lowered
 
 
-    analyze: (id, body)->
+    alchemy_tag: (id, body)->
         doc = Docs.findOne id
         encoded = encodeURIComponent(body)
 
@@ -65,10 +69,8 @@ Meteor.methods
                     keyword_array = _.pluck(result.data.keywords, 'text')
 
                     Docs.update id,
-                        $set:
-                            keywords: result.data.keywords
-                            keyword_array: keyword_array
-
+                        $set: alchemy_tags: keyword_array
+                        $addToSet: tags: keyword_array
 
     clear_my_docs: ->
         Docs.remove({screen_name: Meteor.user().profile.name})
