@@ -1,3 +1,3 @@
 @Docs = new Meteor.Collection 'docs'
-@Keywords = new Meteor.Collection 'keywords'
+@Tags = new Meteor.Collection 'tags'
 @Screennames = new Meteor.Collection 'screen_names'

@@ -2,10 +2,6 @@
 
 Meteor.methods
     get_tweets: (screen_name)->
-        if not screen_name
-            console.error 'No screen name provided'
-            return false
-
         twitterConf = ServiceConfiguration.configurations.findOne(service: 'twitter')
         twitter = Meteor.user().services.twitter
 
@@ -50,7 +46,7 @@ Meteor.methods
         #lowered = tag.toLowerCase() for tag in uniqued
 
         Docs.update id,
-            $set: yaki_tags: lowered
+            # $set: yaki_tags: lowered
             $addToSet: tags: $each: lowered
 
 
@@ -93,7 +89,7 @@ Meteor.publish 'docs', (selected_tags, selected_screen_names)->
 
     match = {}
     match.tags = $all: ['bubl']
-    if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
+    if selected_tags.length > 0 then match.tags = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     Docs.find match,
@@ -135,23 +131,23 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
 
     match = {}
     match.tags = $all: ['bubl']
-    if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
+    if selected_tags.length > 0 then match.tags = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
         { $match: match }
         { $project: tags: 1 }
         { $unwind: '$tags' }
-        { $group: _id: '$tags.text', count: $sum: 1 }
+        { $group: _id: '$tags', count: $sum: 1 }
         { $match: _id: $nin: selected_tags }
         { $sort: count: -1, _id: 1 }
         { $limit: 50 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
-    cloud.forEach (keyword) ->
+    cloud.forEach (tag) ->
         self.added 'tags', Random.id(),
-            text: keyword.text
-            count: keyword.count
+            text: tag.text
+            count: tag.count
 
     self.ready()

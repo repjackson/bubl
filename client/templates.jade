@@ -51,14 +51,14 @@ template(name='home')
                         small #{this.count}
             .ui.center.aligned.segment.globalcloud
                 .ui.center.aligned.header Tags
-                if selected_keywords
-                    #clear_keywords.ui.circular.grey.icon.button
+                if selected_tags
+                    #clear_tags.ui.circular.grey.icon.button
                         i.remove.icon
-                each selected_keywords
+                each selected_tags
                     .unselect_keyword.ui.large.compact.grey.button
                         i.minus.icon
                         |#{this}
-                each global_keywords
+                each global_tags
                     .select_keyword.ui.large.compact.button
                         |#{this.text}
                         small #{this.count}
