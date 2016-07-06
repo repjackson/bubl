@@ -29,6 +29,7 @@ constellation:position@0.4.0
 constellation:session@0.4.0
 constellation:subscriptions@0.4.0
 constellation:tiny@0.4.0
+d3@1.0.0
 dburles:mongo-collection-instances@0.3.4
 ddp@1.2.2
 ddp-client@1.2.1
