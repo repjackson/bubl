@@ -1,3 +1,4 @@
 @Docs = new Meteor.Collection 'docs'
 @Tags = new Meteor.Collection 'tags'
-@Screennames = new Meteor.Collection 'screen_names'
+@Usernames = new Meteor.Collection 'usernames'
+@Authors = new Meteor.Collection 'authors'

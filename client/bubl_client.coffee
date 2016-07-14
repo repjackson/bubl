@@ -1,13 +1,20 @@
 @selected_tags = new ReactiveArray []
-@selected_screen_names = new ReactiveArray []
+@selected_usernames = new ReactiveArray []
 
+
+# Meteor.loginWithInstagram (err) ->
+#     if err
+#         console.log 'login failed', err
+#     else
+#         console.log 'login success', Meteor.user()
+#     return
 
 Template.home.onCreated ->
     Meteor.subscribe 'people'
 
-    @autorun -> Meteor.subscribe('screen_names', selected_tags.array(), selected_screen_names.array())
-    @autorun -> Meteor.subscribe('tags', selected_tags.array(), selected_screen_names.array())
-    @autorun -> Meteor.subscribe('docs', selected_tags.array(), selected_screen_names.array())
+    @autorun -> Meteor.subscribe('usernames', selected_tags.array(), selected_usernames.array())
+    @autorun -> Meteor.subscribe('tags', selected_tags.array(), selected_usernames.array())
+    @autorun -> Meteor.subscribe('docs', selected_tags.array(), selected_usernames.array())
 
 Template.view.onCreated ->
     Meteor.subscribe 'person', @authorId
@@ -30,19 +37,45 @@ Template.home.helpers
     global_tags: -> Tags.find()
     selected_tags: -> selected_tags.list()
 
-    global_screen_names: -> Screennames.find()
-    selected_screen_names: -> selected_screen_names.list()
+    global_usernames: -> Usernames.find()
+    selected_usernames: -> selected_usernames.list()
 
     user: -> Meteor.user()
     docs: -> Docs.find()
 
-    viewMyTweetsClass: -> if Meteor.user().profile.name in selected_screen_names.array() then 'active' else ''
+    viewMyTweetsClass: -> if Meteor.user().profile.name in selected_usernames.array() then 'active' else ''
     hasReceivedTweets: -> Meteor.user().hasReceivedTweets
 
+
+    matchedUsersList:->
+        userMatches = []
+        users = Authors.find({ _id: $ne: Meteor.user().username }).fetch()
+        for user in users
+            tagIntersection = _.intersection(user.authored_list, Meteor.user().authored_list)
+            userMatches.push
+                matched_user_id: user._id
+                matchedUser: user.username
+                tagIntersection: tagIntersection
+                length: tagIntersection.length
+        sortedList = _.sortBy(userMatches, 'length').reverse()
+        clipped_list = []
+        for item in sortedList
+            # console.log item
+            clipped_list.push
+                matchedUser: item.matchedUser
+                tagIntersection: item.tagIntersection.slice(0,5)
+                length: item.length
+
+        # console.log(item) for item in clipped_list
+        return clipped_list
+        # return sortedList
+
+
+
 Template.home.events
-    'click .select_screen_name': -> selected_screen_names.push @text
-    'click .unselect_screen_name': -> selected_screen_names.remove @valueOf()
-    'click #clear_screen_names': -> selected_screen_names.clear()
+    'click .select_username': -> selected_usernames.push @text
+    'click .unselect_username': -> selected_usernames.remove @valueOf()
+    'click #clear_usernames': -> selected_usernames.clear()
 
     'click .select_tag': -> selected_tags.push @text
     'click .unselect_tag': -> selected_tags.remove @valueOf()
@@ -50,27 +83,38 @@ Template.home.events
 
     'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
         Meteor.setTimeout (->
-            selected_screen_names.clear()
+            selected_usernames.clear()
             selected_tags.clear()
             ), 1000
 
     'click .get_tweets': -> Meteor.call 'get_tweets', Meteor.user().profile.name, ->
         Meteor.setTimeout (->
-            selected_screen_names.push Meteor.user().profile.name
+            selected_usernames.push Meteor.user().profile.name
             ), 1000
 
-    'click .view_my_tweets': -> if Meteor.user().profile.name in selected_screen_names.array() then selected_screen_names.remove Meteor.user().profile.name else selected_screen_names.push Meteor.user().profile.name
+    'click .view_my_tweets': -> if Meteor.user().profile.name in selected_usernames.array() then selected_usernames.remove Meteor.user().profile.name else selected_usernames.push Meteor.user().profile.name
 
-    'click .tweetViewAuthorButton': -> if @screen_name in selected_screen_names.array() then selected_screen_names.remove @screen_name else selected_screen_names.push @screen_name
+    'click .tweetViewAuthorButton': -> if @username in selected_usernames.array() then selected_usernames.remove @username else selected_usernames.push @username
 
     'click .authorFilterButton': (event)->
-        if event.target.innerHTML in selected_screen_names.array() then selected_screen_names.remove event.target.innerHTML else selected_screen_names.push event.target.innerHTML
+        if event.target.innerHTML in selected_usernames.array() then selected_usernames.remove event.target.innerHTML else selected_usernames.push event.target.innerHTML
+
+    'keyup .authorName': (e,t)->
+        if e.which is 13
+            username = $('.authorName').val()
+            console.log username
+            Meteor.call 'get_tweets', username, ->
+                Meteor.setTimeout (->
+                selected_usernames.push username
+                ), 1000
+
 
 Template.view.helpers
     doc_tag_class: -> if @valueOf() in selected_tags.array() then 'grey' else ''
-    authorButtonClass: -> if @screen_name in selected_screen_names.array() then 'active' else ''
+    authorButtonClass: -> if @username in selected_usernames.array() then 'active' else ''
     is_author: -> @authorId is Meteor.userId()
     when: -> moment(@timestamp).fromNow()
+    tweet_created_when: -> moment(@tweet_created_at).format("dddd, MMMM Do YYYY")
     bubl_tags: -> _.without(@tags, 'bubl', 'tweet')
 
 Template.view.events

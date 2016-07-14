@@ -8,24 +8,24 @@ template(name='home')
     #facetnav.ui.stackable.menu
         .ui.header.item Bubl
         .ui.item #{user_counter} users #{doc_counter} docs
-        // if currentUser
-        //     .ui.item
-        //         .ui.input.authorName
-        //             input(type=text placeholder='Search Twitter User')
-        // if currentUser
-        //     // if hasReceivedTweets
-        //     a.item.clear_my_docs
-        //         i.remove.red.icon
-        //         |Delete My Tweets
-        //     a.item.view_my_tweets(class=viewMyTweetsClass)
-        //         i.user.icon
-        //         |My Tweets
-        //     // else
-        //     a.item.get_tweets
-        //         i.cloud.green.download.icon
-        //         |Get My Tweets
+        if currentUser
+            .ui.item
+                .ui.input
+                    input.authorName(type=text placeholder='Search Twitter User')
+        if currentUser
+            // if hasReceivedTweets
+            a.item.clear_my_docs
+                i.remove.red.icon
+                |Delete My Tweets
+            a.item.view_my_tweets(class=viewMyTweetsClass)
+                i.user.icon
+                |My Tweets
+            // else
+            a.item.get_tweets
+                i.cloud.green.download.icon
+                |Get My Tweets
         .ui.item
-            +loginButtons align='right'
+            +loginButtons
     // if $.Session.get 'author_filter'
     //     .ui.center.aligned.segment
     //         .ui.center.aligned.header Author
@@ -45,24 +45,25 @@ template(name='home')
                 |#{this.text}
                 small #{this.count}
         .ui.center.aligned.header Authors
-        if selected_screen_names
-            #clear_screen_names.ui.circular.grey.icon.button
+        if selected_usernames
+            #clear_usernames.ui.circular.grey.icon.button
                 i.remove.icon
-        each selected_screen_names
-            .unselect_screen_name.ui.large.compact.grey.button
+        each selected_usernames
+            .unselect_username.ui.large.compact.grey.button
                 i.minus.icon
                 |#{this}
-        each global_screen_names
-            .select_screen_name.ui.large.compact.button
+        each global_usernames
+            .select_username.ui.large.compact.button
                 i.user.icon
                 |#{this.text}
                 small #{this.count}
     .ui.container
-        .ui.cards
+        +top_10
+        .ui.centered.aligned.cards
             each docs
                 .ui.card
                     +view
-
+    
 
 template(name='view')
     .content
@@ -82,12 +83,20 @@ template(name='view')
     //         .ui.label #{this}
     .content
         div Imported #{when}
-        div Tweeted at #{tweet_created_at}
+        div Tweeted at #{tweet_created_when}
+        if entities.hashtags.length
+            div Hashtags
+                each entities.hashtags
+                    .ui.label ##{text}
+        if entities.user_mentions.length
+            div User mentions
+                each entities.user_mentions
+                    .ui.label @#{screen_name}
         div
             if is_author
                 .ui.icon.button.delete_tweet
                     i.remove.red.icon
-            .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{screen_name}
+            .ui.button.tweetViewAuthorButton(class=authorButtonClass) Author: #{username}
 
-template(name='bubbleChart')
-    .bubbleChart
+// template(name='bubbleChart')
+//     .bubbleChart

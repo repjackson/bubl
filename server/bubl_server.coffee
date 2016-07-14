@@ -1,7 +1,7 @@
 
 
 Meteor.methods
-    get_tweets: (screen_name)->
+    get_tweets: (username)->
         twitterConf = ServiceConfiguration.configurations.findOne(service: 'twitter')
         twitter = Meteor.user().services.twitter
 
@@ -13,30 +13,41 @@ Meteor.methods
             app_only_auth:true)
 
         Twit.get 'statuses/user_timeline', {
-            screen_name: screen_name
+            screen_name: username
             count: 200
             include_rts: true
             exclude_replies: false
         }, Meteor.bindEnvironment(((err, data, response) ->
             for tweet in data
                 # console.log tweet
-                id = Docs.insert
-                    authorId: Meteor.userId()
-                    tags: ['bubl','tweet']
-                    body: tweet.text
-                    screen_name: screen_name
-                    timestamp: Date.now()
-                    tweet_created_at: tweet.created_at
-                Meteor.call 'alchemy_tag', id, tweet.text, ->
-                    console.log 'alchemy was run'
-                Meteor.call 'yaki_tag', id, tweet.text
+                found_tweet = Docs.findOne(tweet.id_str)
+                if found_tweet
+                    console.log 'found duplicate ', tweet.id_str
+                    continue
+                else
+                    id = Docs.insert
+                        _id: tweet.id_str
+                        entities: tweet.entities
+                        # tags: ['bubl','tweet']
+                        body: tweet.text
+                        username: username
+                        timestamp: Date.now()
+                        tweet_created_at: tweet.created_at
+                    # Meteor.call 'alchemy_tag', id, tweet.text, ->
+                    #     console.log 'alchemy was run'
+                    Meteor.call 'yaki_tag', id, tweet.text
             ))
 
         # if screen_name is Meteor.user().profile.name
-        Meteor.users.update Meteor.userId,
-            $set: hasReceivedTweets: true
+        # Meteor.users.update Meteor.userId,
+        #     $set: hasReceivedTweets: true
 
-        Meteor.call 'generate_personal_cloud'
+        existing_author = Authors.findOne username:username
+        if existing_author then Meteor.call 'generate_author_cloud', username
+        else
+            Authors.insert username: username,
+                -> 
+                    Meteor.call 'generate_author_cloud', username
 
     yaki_tag: (id, body)->
         doc = Docs.findOne id
@@ -67,6 +78,7 @@ Meteor.methods
             , (err, result)->
                 if err then console.log err
                 else
+                    console.log result
                     keyword_array = _.pluck(result.data.keywords, 'text')
 
                     Docs.update id,
@@ -74,15 +86,12 @@ Meteor.methods
                         $addToSet: tags: $each: keyword_array
 
     clear_my_docs: ->
-        Docs.remove({screen_name: Meteor.user().profile.name})
+        Docs.remove({username: Meteor.user().profile.name})
 
-        Meteor.users.update Meteor.userId(),
-            $set: hasReceivedTweets: false
-
-
-    generate_personal_cloud: (uid)->
+    generate_author_cloud: (username)->
+    
         authored_cloud = Docs.aggregate [
-            { $match: authorId: Meteor.userId() }
+            { $match: username: username }
             { $project: tags: 1 }
             { $unwind: '$tags' }
             { $group: _id: '$tags', count: $sum: 1 }
@@ -91,11 +100,19 @@ Meteor.methods
             { $project: _id: 0, name: '$_id', count: 1 }
             ]
         authored_list = (tag.name for tag in authored_cloud)
-        Meteor.users.update Meteor.userId(),
+        
+        console.log authored_list
+        Authors.update {username: username},
             $set:
                 authored_cloud: authored_cloud
                 authored_list: authored_list
 
+Meteor.publish 'top_10', (tag)->
+    # user_ranking = []
+    Authors.find({
+        authored_list: $in: [tag]
+    })
+    
 
 
 Docs.allow
@@ -108,7 +125,6 @@ Meteor.publish 'docs', (selected_tags, selected_screen_names)->
     Counts.publish(this, 'doc_counter', Docs.find(), { noReady: true })
 
     match = {}
-    match.tags = $all: ['bubl']
     if selected_tags.length > 0 then match.tags = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
@@ -121,28 +137,27 @@ Meteor.publish 'people', -> Meteor.users.find {}
 
 Meteor.publish 'person', (id)-> Meteor.users.find id
 
-Meteor.publish 'screen_names', (selected_tags, selected_screen_names)->
+Meteor.publish 'usernames', (selected_tags, selected_usernames)->
     self = @
 
     match = {}
-    match.tags = $all: ['bubl']
     if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
-    if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
+    if selected_usernames.length > 0 then match.username = $in: selected_usernames
 
     cloud = Docs.aggregate [
         { $match: match }
-        { $project: screen_name: 1 }
-        { $group: _id: '$screen_name', count: $sum: 1 }
-        { $match: _id: $nin: selected_screen_names }
+        { $project: username: 1 }
+        { $group: _id: '$username', count: $sum: 1 }
+        { $match: _id: $nin: selected_usernames }
         { $sort: count: -1, _id: 1 }
-        { $limit: 50 }
+        { $limit: 10 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
-    cloud.forEach (screen_name) ->
-        self.added 'screen_names', Random.id(),
-            text: screen_name.text
-            count: screen_name.count
+    cloud.forEach (username) ->
+        self.added 'usernames', Random.id(),
+            text: username.text
+            count: username.count
     self.ready()
 
 
@@ -150,8 +165,7 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
     self = @
 
     match = {}
-    selected_tags.push 'bubl', 'tweet'
-    match.tags = $all: selected_tags
+    if selected_tags.length > 0 then match.tags = $all: selected_tags
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     cloud = Docs.aggregate [
@@ -161,7 +175,7 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
         { $group: _id: '$tags', count: $sum: 1 }
         { $match: _id: $nin: selected_tags }
         { $sort: count: -1, _id: 1 }
-        { $limit: 50 }
+        { $limit: 20 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
