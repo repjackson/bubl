@@ -73,11 +73,15 @@ Template.home.helpers
 
 
 Template.home.events
+    'click .generate_cloud': -> Meteor.call 'generate_author_cloud', 'Eric Jackson'
+
     'click .select_username': -> selected_usernames.push @text
     'click .unselect_username': -> selected_usernames.remove @valueOf()
     'click #clear_usernames': -> selected_usernames.clear()
 
-    'click .select_tag': -> selected_tags.push @text
+    'click .select_tag': -> 
+        Session.set('tag_selection', @text)
+        selected_tags.push @text
     'click .unselect_tag': -> selected_tags.remove @valueOf()
     'click #clear_tags': -> selected_tags.clear()
 
@@ -115,7 +119,6 @@ Template.view.helpers
     is_author: -> @authorId is Meteor.userId()
     when: -> moment(@timestamp).fromNow()
     tweet_created_when: -> moment(@tweet_created_at).format("dddd, MMMM Do YYYY")
-    bubl_tags: -> _.without(@tags, 'bubl', 'tweet')
 
 Template.view.events
     'click .delete_tweet': -> Docs.remove @_id

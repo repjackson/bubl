@@ -16,14 +16,16 @@ template(name='home')
             // if hasReceivedTweets
             a.item.clear_my_docs
                 i.remove.red.icon
-                |Delete My Tweets
+                // |Delete My Tweets
             a.item.view_my_tweets(class=viewMyTweetsClass)
                 i.user.icon
-                |My Tweets
+                |Mine
             // else
             a.item.get_tweets
                 i.cloud.green.download.icon
-                |Get My Tweets
+                // |Get My Tweets
+            a.item.generate_cloud
+                |gen
         .ui.item
             +loginButtons
     // if $.Session.get 'author_filter'
@@ -31,7 +33,7 @@ template(name='home')
     //         .ui.center.aligned.header Author
     //         .ui.blue.button.authorFilterButton
     //             |{{$.Session.get 'author_filter'}}
-    .ui.center.aligned.segment.globalcloud
+    .ui.center.aligned.segment.container.globalcloud
         .ui.center.aligned.header Tags
         if selected_tags
             #clear_tags.ui.circular.grey.icon.button
@@ -72,7 +74,7 @@ template(name='view')
                 #{body}
     .content
         strong Tags:
-        each bubl_tags
+        each tags
             .doc_tag.ui.compact.button(class=doc_tag_class)
                 div #{this}
     // div Yaki Tags

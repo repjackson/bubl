@@ -1,6 +1,8 @@
 template(name='top_10')
     .ui.segment
         h2.ui.header Top 10
-        each top_10_list
-            strong leader_username
-            strong leader_tag_count
+        h4.ui.header Tag Selection #{tag_selection}
+        ul
+            each top_10_list
+                li #{leader_username}
+                li #{leader_tag_count}

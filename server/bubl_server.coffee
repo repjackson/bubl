@@ -36,18 +36,14 @@ Meteor.methods
                     # Meteor.call 'alchemy_tag', id, tweet.text, ->
                     #     console.log 'alchemy was run'
                     Meteor.call 'yaki_tag', id, tweet.text
-            ))
+            )), ->
+                existing_author = Authors.findOne username:username
+                if existing_author then Meteor.call 'generate_author_cloud', username
+                else
+                    Authors.insert username: username,
+                        -> 
+                            Meteor.call 'generate_author_cloud', username
 
-        # if screen_name is Meteor.user().profile.name
-        # Meteor.users.update Meteor.userId,
-        #     $set: hasReceivedTweets: true
-
-        existing_author = Authors.findOne username:username
-        if existing_author then Meteor.call 'generate_author_cloud', username
-        else
-            Authors.insert username: username,
-                -> 
-                    Meteor.call 'generate_author_cloud', username
 
     yaki_tag: (id, body)->
         doc = Docs.findOne id
@@ -89,9 +85,11 @@ Meteor.methods
         Docs.remove({username: Meteor.user().profile.name})
 
     generate_author_cloud: (username)->
-    
+        match = {}
+        match.username = username
+        console.log match
         authored_cloud = Docs.aggregate [
-            { $match: username: username }
+            { $match: match }
             { $project: tags: 1 }
             { $unwind: '$tags' }
             { $group: _id: '$tags', count: $sum: 1 }
@@ -99,16 +97,24 @@ Meteor.methods
             { $limit: 10 }
             { $project: _id: 0, name: '$_id', count: 1 }
             ]
+        console.log authored_cloud
+        
         authored_list = (tag.name for tag in authored_cloud)
         
-        console.log authored_list
         Authors.update {username: username},
             $set:
                 authored_cloud: authored_cloud
                 authored_list: authored_list
+            ,
+                multi: false
+                upsert: true
 
 Meteor.publish 'top_10', (tag)->
     # user_ranking = []
+    # Authors.find({
+    #     authored_list: $in: [tag]
+    # })
+    
     Authors.find({
         authored_list: $in: [tag]
     })
@@ -129,7 +135,7 @@ Meteor.publish 'docs', (selected_tags, selected_screen_names)->
     if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
 
     Docs.find match,
-        limit: 20
+        limit: 10
 
 Meteor.publish 'doc', (id)-> Docs.find id
 
@@ -161,12 +167,12 @@ Meteor.publish 'usernames', (selected_tags, selected_usernames)->
     self.ready()
 
 
-Meteor.publish 'tags', (selected_tags, selected_screen_names)->
+Meteor.publish 'tags', (selected_tags, selected_usernames)->
     self = @
 
     match = {}
     if selected_tags.length > 0 then match.tags = $all: selected_tags
-    if selected_screen_names.length > 0 then match.screen_name = $in: selected_screen_names
+    if selected_usernames.length > 0 then match.username = $in: selected_usernames
 
     cloud = Docs.aggregate [
         { $match: match }
@@ -175,7 +181,7 @@ Meteor.publish 'tags', (selected_tags, selected_screen_names)->
         { $group: _id: '$tags', count: $sum: 1 }
         { $match: _id: $nin: selected_tags }
         { $sort: count: -1, _id: 1 }
-        { $limit: 20 }
+        { $limit: 10 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
