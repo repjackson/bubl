@@ -36,13 +36,13 @@ Meteor.methods
                     # Meteor.call 'alchemy_tag', id, tweet.text, ->
                     #     console.log 'alchemy was run'
                     Meteor.call 'yaki_tag', id, tweet.text
-            )), ->
-                existing_author = Authors.findOne username:username
-                if existing_author then Meteor.call 'generate_author_cloud', username
-                else
-                    Authors.insert username: username,
-                        -> 
-                            Meteor.call 'generate_author_cloud', username
+            existing_author = Authors.findOne username:username
+            if existing_author then Meteor.call 'generate_author_cloud', username
+            else
+                Authors.insert username: username,
+                    -> 
+                        Meteor.call 'generate_author_cloud', username
+            ))
 
 
     yaki_tag: (id, body)->
@@ -169,10 +169,12 @@ Meteor.publish 'usernames', (selected_tags, selected_usernames)->
 
 Meteor.publish 'tags', (selected_tags, selected_usernames)->
     self = @
-
+    me = Meteor.users.findOne @userId
+    console.log me
     match = {}
     if selected_tags.length > 0 then match.tags = $all: selected_tags
-    if selected_usernames.length > 0 then match.username = $in: selected_usernames
+    # if selected_usernames.length > 0 then match.username = $in: selected_usernames
+    match.username = me.profile.name
 
     cloud = Docs.aggregate [
         { $match: match }

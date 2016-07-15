@@ -46,25 +46,25 @@ template(name='home')
             .select_tag.ui.compact.button(class=cloud_tag_class)
                 |#{this.text}
                 small #{this.count}
-        .ui.center.aligned.header Authors
-        if selected_usernames
-            #clear_usernames.ui.circular.grey.icon.button
-                i.remove.icon
-        each selected_usernames
-            .unselect_username.ui.large.compact.grey.button
-                i.minus.icon
-                |#{this}
-        each global_usernames
-            .select_username.ui.large.compact.button
-                i.user.icon
-                |#{this.text}
-                small #{this.count}
+        // .ui.center.aligned.header Authors
+        // if selected_usernames
+        //     #clear_usernames.ui.circular.grey.icon.button
+        //         i.remove.icon
+        // each selected_usernames
+        //     .unselect_username.ui.large.compact.grey.button
+        //         i.minus.icon
+        //         |#{this}
+        // each global_usernames
+        //     .select_username.ui.large.compact.button
+        //         i.user.icon
+        //         |#{this.text}
+        //         small #{this.count}
     .ui.container
         +top_10
-        .ui.centered.aligned.cards
-            each docs
-                .ui.card
-                    +view
+        // .ui.centered.aligned.cards
+            // each docs
+            //     .ui.card
+            //         +view
     
 
 template(name='view')

@@ -12,7 +12,7 @@
 Template.home.onCreated ->
     Meteor.subscribe 'people'
 
-    @autorun -> Meteor.subscribe('usernames', selected_tags.array(), selected_usernames.array())
+    @autorun -> Meteor.subscribe('usernames', selected_tags.array())
     @autorun -> Meteor.subscribe('tags', selected_tags.array(), selected_usernames.array())
     @autorun -> Meteor.subscribe('docs', selected_tags.array(), selected_usernames.array())
 
@@ -73,7 +73,7 @@ Template.home.helpers
 
 
 Template.home.events
-    'click .generate_cloud': -> Meteor.call 'generate_author_cloud', 'Eric Jackson'
+    'click .generate_cloud': -> Meteor.call 'generate_author_cloud', 'oprah'
 
     'click .select_username': -> selected_usernames.push @text
     'click .unselect_username': -> selected_usernames.remove @valueOf()

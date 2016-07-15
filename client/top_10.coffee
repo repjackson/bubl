@@ -18,7 +18,7 @@ Template.top_10.helpers
                 leader_username: author.username
                 leader_tag_count: user_tag_count
         # console.log author_ranking
-        sorted_list = _.sortBy(author_ranking, 'leader_tag_count')
+        sorted_list = _.sortBy(author_ranking, 'leader_tag_count').reverse()
         # clipped_list = []
         # for item in sorted_list
         #     # console.log item
