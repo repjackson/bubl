@@ -109,14 +109,14 @@ Meteor.methods
                 multi: false
                 upsert: true
 
-Meteor.publish 'top_10', (tag)->
+Meteor.publish 'top_10', (selected_tags)->
     # user_ranking = []
     # Authors.find({
     #     authored_list: $in: [tag]
     # })
     
     Authors.find({
-        authored_list: $in: [tag]
+        authored_list: $all: selected_tags
     })
     
 
@@ -148,7 +148,7 @@ Meteor.publish 'usernames', (selected_tags, selected_usernames)->
 
     match = {}
     if selected_tags.length > 0 then match.keyword_array = $all: selected_tags
-    if selected_usernames.length > 0 then match.username = $in: selected_usernames
+    # if selected_usernames.length > 0 then match.username = $in: selected_usernames
 
     cloud = Docs.aggregate [
         { $match: match }
@@ -169,12 +169,12 @@ Meteor.publish 'usernames', (selected_tags, selected_usernames)->
 
 Meteor.publish 'tags', (selected_tags, selected_usernames)->
     self = @
-    me = Meteor.users.findOne @userId
-    console.log me
+    # me = Meteor.users.findOne @userId
+    # console.log me
     match = {}
     if selected_tags.length > 0 then match.tags = $all: selected_tags
-    # if selected_usernames.length > 0 then match.username = $in: selected_usernames
-    match.username = me.profile.name
+    if selected_usernames.length > 0 then match.username = $in: selected_usernames
+    # match.username = me.profile.name
 
     cloud = Docs.aggregate [
         { $match: match }
@@ -183,7 +183,7 @@ Meteor.publish 'tags', (selected_tags, selected_usernames)->
         { $group: _id: '$tags', count: $sum: 1 }
         { $match: _id: $nin: selected_tags }
         { $sort: count: -1, _id: 1 }
-        { $limit: 10 }
+        { $limit: 20 }
         { $project: _id: 0, text: '$_id', count: 1 }
         ]
 
@@ -220,3 +220,8 @@ Meteor.publish 'people_tags', (selected_tags)->
             index: i
 
     self.ready()
+
+
+Meteor.publish 'me_as_author', ->
+    me = Meteor.users.findOne @userId
+    Authors.find username: me.profile.name

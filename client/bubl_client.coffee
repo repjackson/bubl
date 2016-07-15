@@ -11,7 +11,6 @@
 
 Template.home.onCreated ->
     Meteor.subscribe 'people'
-
     @autorun -> Meteor.subscribe('usernames', selected_tags.array())
     @autorun -> Meteor.subscribe('tags', selected_tags.array(), selected_usernames.array())
     @autorun -> Meteor.subscribe('docs', selected_tags.array(), selected_usernames.array())
@@ -26,10 +25,10 @@ Template.home.helpers
 
     cloud_tag_class: ->
         buttonClass = switch
-            when @index <= 10 then 'big'
-            when @index <= 20 then 'large'
-            when @index <= 30 then ''
-            when @index <= 40 then 'small'
+            when @index <= 5 then 'big'
+            when @index <= 10 then 'large'
+            when @index <= 15 then ''
+            when @index <= 20 then 'small'
             when @index <= 50 then 'tiny'
         return buttonClass
 
@@ -43,7 +42,7 @@ Template.home.helpers
     user: -> Meteor.user()
     docs: -> Docs.find()
 
-    viewMyTweetsClass: -> if Meteor.user().profile.name in selected_usernames.array() then 'active' else ''
+    viewMyTweetsClass: -> if Meteor.user().profile.name in selected_usernames.array() then 'primary' else ''
     hasReceivedTweets: -> Meteor.user().hasReceivedTweets
 
 
@@ -123,3 +122,24 @@ Template.view.helpers
 Template.view.events
     'click .delete_tweet': -> Docs.remove @_id
     'click .doc_tag': -> if @valueOf() in selected_tags.array() then selected_tags.remove @valueOf() else selected_tags.push @valueOf()
+
+
+Template.my_tags.helpers
+    my_tags: -> 
+        me = Authors.findOne username: Meteor.user().profile.name
+        # console.log me?.authored_cloud
+        me?.authored_list
+        
+    my_tag_class: -> if @valueOf() in selected_tags.array() then 'primary' else ''
+
+    
+
+Template.my_tags.events
+    # 'click .my_tag': -> Session.set('tag_selection', @valueOd())
+    'click .my_tag': -> if @valueOf() in selected_tags.array() then selected_tags.remove @valueOf() else selected_tags.push @valueOf()
+
+
+
+Template.my_tags.onCreated ->
+    @autorun -> Meteor.subscribe('me_as_author')
+

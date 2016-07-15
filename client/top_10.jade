@@ -1,7 +1,9 @@
 template(name='top_10')
     .ui.segment
         h2.ui.header Top 10
-        h4.ui.header Tag Selection #{tag_selection}
+        h4.ui.header Tag Selection 
+            each selected_tags
+                .ui.basic.label #{this}
         ul
             each top_10_list
                 li #{leader_username} (#{leader_tag_count})

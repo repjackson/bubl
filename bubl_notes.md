@@ -21,4 +21,9 @@ Sections:
         
         
         
-L
+
+
+Todo
+-show top 10 selectors
+-show global cloud
+-
