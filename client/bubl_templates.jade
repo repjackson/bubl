@@ -16,16 +16,15 @@ template(name='home')
             // if hasReceivedTweets
             a.item.clear_my_docs
                 i.remove.red.icon
-                // |Delete My Tweets
+                |Delete
             a.item.view_my_tweets(class=viewMyTweetsClass)
                 i.user.icon
-                |Mine
+                | Mine
+                // Shows home instead of user's own tweets
             // else
             a.item.get_tweets
                 i.cloud.green.download.icon
-                // |Get My Tweets
-            // a.item.generate_cloud
-            //     |gen
+                |Sync Tweets
         .ui.item
             +loginButtons
     // if $.Session.get 'author_filter'
