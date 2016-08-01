@@ -1,3 +1,6 @@
+DEPLOY_HOSTNAME=us-east-1.galaxy-deploy.meteor.com meteor deploy http://www.bubl.tech --settings ./settings.json"
+
+
 bubl: rise to the top
 
 layout:
