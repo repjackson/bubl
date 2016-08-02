@@ -11,17 +11,18 @@
 
 Template.home.onCreated ->
     Meteor.subscribe 'people'
-    @autorun -> Meteor.subscribe('usernames', selected_tags.array())
+    # @autorun -> Meteor.subscribe('usernames', selected_tags.array())
     @autorun -> Meteor.subscribe('tags', selected_tags.array(), selected_usernames.array())
     @autorun -> Meteor.subscribe('docs', selected_tags.array(), selected_usernames.array())
 
 Template.view.onCreated ->
     Meteor.subscribe 'person', @authorId
 
-
-Template.home.helpers
+Template.nav.helpers
     doc_counter: -> Counts.get('doc_counter')
     user_counter: -> Meteor.users.find().count()
+
+Template.home.helpers
 
     cloud_tag_class: ->
         buttonClass = switch

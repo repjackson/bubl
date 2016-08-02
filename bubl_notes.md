@@ -27,6 +27,5 @@ Sections:
 
 
 Todo
--show top 10 selectors
--show global cloud
--
+-change login to useraccounts
+-create sync buttons that print json response

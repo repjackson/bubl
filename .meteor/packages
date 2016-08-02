@@ -31,5 +31,10 @@ perak:markdown
 raix:handlebar-helpers
 nefiltari:yaki
 momentjs:moment
-d3
 bozhao:accounts-instagram
+useraccounts:semantic-ui
+kadira:blaze-layout
+kadira:flow-router
+splendido:accounts-meld
+useraccounts:flow-routing
+accounts-password
