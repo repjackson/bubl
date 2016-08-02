@@ -271,6 +271,6 @@ Meteor.publish 'people_tags', (selected_tags)->
     self.ready()
 
 
-Meteor.publish 'me_as_author', ->
-    me = Meteor.users.findOne @userId
-    Authors.find username: me.profile.name
+# Meteor.publish 'me_as_author', ->
+#     me = Meteor.users.findOne @userId
+#     Authors.find username: me.profile.name

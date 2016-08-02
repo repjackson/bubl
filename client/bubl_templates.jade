@@ -50,6 +50,10 @@ template(name='home')
     //         .ui.blue.button.authorFilterButton
     //             |{{$.Session.get 'author_filter'}}
     if currentUser
+        +atForm
+        .ui.segment
+            .ui.header Accounts Meld
+            +accountsMeld
         +my_tags
         +check_in
     .ui.center.aligned.segment.globalcloud

@@ -5,3 +5,7 @@ ServiceConfiguration.configurations.insert
     secret: '7696a4666c0b46149e64b72b6932ae1c'
     
     
+AccountsMeld.configure
+    askBeforeMeld: false
+    # meldDBCallback: meldDBCallback
+    # serviceAddedCallback: serviceAddedCallback
