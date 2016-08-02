@@ -27,5 +27,4 @@ Sections:
 
 
 Todo
--change login to useraccounts
 -create sync buttons that print json response

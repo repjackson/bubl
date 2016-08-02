@@ -2,12 +2,12 @@
 @selected_usernames = new ReactiveArray []
 
 
-# Meteor.loginWithInstagram (err) ->
-#     if err
-#         console.log 'login failed', err
-#     else
-#         console.log 'login success', Meteor.user()
-#     return
+Meteor.loginWithInstagram (err) ->
+    if err
+        console.log 'login failed', err
+    else
+        console.log 'login success', Meteor.user()
+    return
 
 Template.home.onCreated ->
     Meteor.subscribe 'people'
@@ -22,8 +22,33 @@ Template.nav.helpers
     doc_counter: -> Counts.get('doc_counter')
     user_counter: -> Meteor.users.find().count()
 
-Template.home.helpers
 
+Template.nav.events
+    'click .sync_tweets': -> Meteor.call 'sync_tweets', Meteor.user().profile.name, ->
+   
+    'click .sync_instagram': -> Meteor.call 'sync_instagram', Meteor.user().profile.name, ->
+   
+    'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
+        Meteor.setTimeout (->
+            selected_usernames.clear()
+            selected_tags.clear()
+            ), 1000
+
+
+
+Template.check_in.events
+    'keyup #check_in': (e,t)->
+        if e.which is 13
+            location = $('#check_in').val()
+            console.log location
+            Meteor.call 'check_in', location, ->
+                console.log "checked into #{location}"
+
+
+
+
+
+Template.home.helpers
     cloud_tag_class: ->
         buttonClass = switch
             when @index <= 5 then 'big'
@@ -73,28 +98,20 @@ Template.home.helpers
 
 
 Template.home.events
-    'click .generate_cloud': -> Meteor.call 'generate_author_cloud', 'oprah'
-
     'click .select_username': -> selected_usernames.push @text
+    
     'click .unselect_username': -> selected_usernames.remove @valueOf()
+    
     'click #clear_usernames': -> selected_usernames.clear()
 
     'click .select_tag': -> 
         Session.set('tag_selection', @text)
         selected_tags.push @text
+    
     'click .unselect_tag': -> selected_tags.remove @valueOf()
+    
     'click #clear_tags': -> selected_tags.clear()
 
-    'click .clear_my_docs': -> Meteor.call 'clear_my_docs', ->
-        Meteor.setTimeout (->
-            selected_usernames.clear()
-            selected_tags.clear()
-            ), 1000
-
-    'click .get_tweets': -> Meteor.call 'get_tweets', Meteor.user().profile.name, ->
-        Meteor.setTimeout (->
-            selected_usernames.push Meteor.user().profile.name
-            ), 1000
 
     'click .view_my_tweets': -> if Meteor.user().profile.name in selected_usernames.array() then selected_usernames.remove Meteor.user().profile.name else selected_usernames.push Meteor.user().profile.name
 
@@ -103,14 +120,14 @@ Template.home.events
     'click .authorFilterButton': (event)->
         if event.target.innerHTML in selected_usernames.array() then selected_usernames.remove event.target.innerHTML else selected_usernames.push event.target.innerHTML
 
-    'keyup .authorName': (e,t)->
-        if e.which is 13
-            username = $('.authorName').val()
-            console.log username
-            Meteor.call 'get_tweets', username, ->
-                Meteor.setTimeout (->
-                selected_usernames.push username
-                ), 1000
+    # 'keyup .authorName': (e,t)->
+    #     if e.which is 13
+    #         username = $('.authorName').val()
+    #         console.log username
+    #         Meteor.call 'get_tweets', username, ->
+    #             Meteor.setTimeout (->
+    #             selected_usernames.push username
+    #             ), 1000
 
 
 Template.view.helpers

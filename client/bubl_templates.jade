@@ -24,12 +24,24 @@ template(name='nav')
             //     | Mine
                 // Shows home instead of user's own tweets
             // else
-            a.item.get_tweets
+            a.item.sync_instagram
+                i.cloud.green.download.icon
+                |Sync
+                i.instagram.icon
+            a.item.sync_tweets
                 i.cloud.green.download.icon
                 |Sync
                 i.twitter.icon
             a.ui.item(href='/profile') Profile
         +atNavButton
+
+template(name='check_in')
+    .ui.segment
+        .ui.header Check In
+        .ui.input
+            input#check_in(type='text' placeholder='Define Location')
+        if currentUser.location
+            | Checked into #{currentUser.location}
 
 template(name='home')
     // if $.Session.get 'author_filter'
@@ -39,6 +51,7 @@ template(name='home')
     //             |{{$.Session.get 'author_filter'}}
     if currentUser
         +my_tags
+        +check_in
     .ui.center.aligned.segment.globalcloud
         .ui.center.aligned.header Global Tags
         if selected_tags

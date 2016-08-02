@@ -19,7 +19,6 @@ flemay:less-autoprefixer
 random@1.0.10
 manuel:reactivearray
 meteorhacks:aggregate
-accounts-ui@1.1.9
 jquery@1.11.9
 tmeasday:publish-counts
 babrahams:constellation
@@ -38,3 +37,6 @@ kadira:flow-router
 splendido:accounts-meld
 useraccounts:flow-routing
 accounts-password
+accounts-facebook
+accounts-github
+iandouglas:accounts-ui-semantic-ui

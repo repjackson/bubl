@@ -1,7 +1,7 @@
 
 
 Meteor.methods
-    get_tweets: (username)->
+    sync_tweets: (username)->
         twitterConf = ServiceConfiguration.configurations.findOne(service: 'twitter')
         twitter = Meteor.user().services.twitter
 
@@ -33,8 +33,8 @@ Meteor.methods
                         username: username
                         timestamp: Date.now()
                         tweet_created_at: tweet.created_at
-                    # Meteor.call 'alchemy_tag', id, tweet.text, ->
-                    #     console.log 'alchemy was run'
+                    Meteor.call 'alchemy_tag', id, tweet.text, ->
+                        console.log 'alchemy was run'
                     Meteor.call 'yaki_tag', id, tweet.text
             existing_author = Authors.findOne username:username
             if existing_author then Meteor.call 'generate_author_cloud', username
@@ -43,6 +43,50 @@ Meteor.methods
                     -> 
                         Meteor.call 'generate_author_cloud', username
             ))
+
+    sync_instagram: (username)->
+        twitterConf = ServiceConfiguration.configurations.findOne(service: 'instagram')
+        instagram = Meteor.user().services.instagram
+
+        console.log instagram
+        # Twit = new TwitMaker(
+        #     consumer_key: twitterConf.consumerKey
+        #     consumer_secret: twitterConf.secret
+        #     access_token: twitter.accessToken
+        #     access_token_secret: twitter.accessTokenSecret
+        #     app_only_auth:true)
+
+        # Twit.get 'statuses/user_timeline', {
+        #     screen_name: username
+        #     count: 200
+        #     include_rts: true
+        #     exclude_replies: false
+        # }, Meteor.bindEnvironment(((err, data, response) ->
+        #     for tweet in data
+        #         # console.log tweet
+        #         found_tweet = Docs.findOne(tweet.id_str)
+        #         if found_tweet
+        #             console.log 'found duplicate ', tweet.id_str
+        #             continue
+        #         else
+        #             id = Docs.insert
+        #                 _id: tweet.id_str
+        #                 entities: tweet.entities
+        #                 # tags: ['bubl','tweet']
+        #                 body: tweet.text
+        #                 username: username
+        #                 timestamp: Date.now()
+        #                 tweet_created_at: tweet.created_at
+        #             Meteor.call 'alchemy_tag', id, tweet.text, ->
+        #                 console.log 'alchemy was run'
+        #             Meteor.call 'yaki_tag', id, tweet.text
+        #     existing_author = Authors.findOne username:username
+        #     if existing_author then Meteor.call 'generate_author_cloud', username
+        #     else
+        #         Authors.insert username: username,
+        #             -> 
+        #                 Meteor.call 'generate_author_cloud', username
+        #     ))
 
 
     yaki_tag: (id, body)->
@@ -55,7 +99,7 @@ Meteor.methods
         #lowered = tag.toLowerCase() for tag in uniqued
 
         Docs.update id,
-            # $set: yaki_tags: lowered
+            $set: yaki_tags: lowered
             $addToSet: tags: $each: lowered
 
 
@@ -74,15 +118,20 @@ Meteor.methods
             , (err, result)->
                 if err then console.log err
                 else
-                    console.log result
+                    console.log 'alchemy result:', result
                     keyword_array = _.pluck(result.data.keywords, 'text')
+                    lowered_keywords = keyword_array.map (tag)-> tag.toLowerCase()
 
                     Docs.update id,
-                        $set: alchemy_tags: keyword_array
-                        $addToSet: tags: $each: keyword_array
+                        $set: alchemy_tags: lowered_keywords
+                        $addToSet: tags: $each: lowered_keywords
 
     clear_my_docs: ->
         Docs.remove({username: Meteor.user().profile.name})
+
+    check_in: (location)->
+        Meteor.users.update Meteor.userId(),
+            $set: location: location
 
     generate_author_cloud: (username)->
         match = {}
@@ -97,7 +146,7 @@ Meteor.methods
             { $limit: 10 }
             { $project: _id: 0, name: '$_id', count: 1 }
             ]
-        console.log authored_cloud
+        console.log 'authored cloud', authored_cloud
         
         authored_list = (tag.name for tag in authored_cloud)
         
